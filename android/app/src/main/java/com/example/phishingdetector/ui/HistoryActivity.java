@@ -1,0 +1,126 @@
+package com.example.phishingdetector.ui;
+
+import android.content.ContentValues;
+import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.net.Uri;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.phishingdetector.R;
+import com.example.phishingdetector.api.ApiClient;
+import com.example.phishingdetector.api.Models;
+import com.example.phishingdetector.util.SessionManager;
+import com.google.android.material.appbar.MaterialToolbar;
+
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class HistoryActivity extends AppCompatActivity {
+
+    private RecyclerView recycler;
+    private ProgressBar progress;
+    private TextView tvEmpty;
+    private SessionManager session;
+    private final List<Models.HistoryItem> items = new ArrayList<>();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_history);
+        session = new SessionManager(this);
+
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setNavigationOnClickListener(v -> finish());
+
+        recycler = findViewById(R.id.recycler);
+        progress = findViewById(R.id.progress);
+        tvEmpty = findViewById(R.id.tvEmpty);
+        recycler.setLayoutManager(new LinearLayoutManager(this));
+        recycler.setAdapter(new HistoryAdapter(items));
+
+        findViewById(R.id.btnDownloadPdf).setOnClickListener(v -> downloadPdf());
+        loadHistory();
+    }
+
+    private void loadHistory() {
+        setLoading(true);
+        ApiClient.get().history(session.bearer())
+                .enqueue(new Callback<Models.HistoryResponse>() {
+                    @Override
+                    public void onResponse(Call<Models.HistoryResponse> c, Response<Models.HistoryResponse> res) {
+                        setLoading(false);
+                        Models.HistoryResponse body = res.body();
+                        if (body != null && body.history != null) {
+                            items.clear();
+                            items.addAll(body.history);
+                            recycler.getAdapter().notifyDataSetChanged();
+                            tvEmpty.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
+                        }
+                    }
+                    @Override
+                    public void onFailure(Call<Models.HistoryResponse> c, Throwable t) {
+                        setLoading(false);
+                        toast("Could not load history: " + t.getMessage());
+                    }
+                });
+    }
+
+    private void downloadPdf() {
+        setLoading(true);
+        ApiClient.get().historyPdf(session.bearer())
+                .enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> c, Response<ResponseBody> res) {
+                        setLoading(false);
+                        if (res.isSuccessful() && res.body() != null) {
+                            savePdfToDownloads(res.body());
+                        } else {
+                            toast("Download failed");
+                        }
+                    }
+                    @Override
+                    public void onFailure(Call<ResponseBody> c, Throwable t) {
+                        setLoading(false);
+                        toast("Download error: " + t.getMessage());
+                    }
+                });
+    }
+
+    /** Saves the PDF bytes into the public Downloads folder (MediaStore, no permission needed). */
+    private void savePdfToDownloads(ResponseBody body) {
+        String fileName = "search_history_" + System.currentTimeMillis() + ".pdf";
+        try {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Downloads.DISPLAY_NAME, fileName);
+            values.put(MediaStore.Downloads.MIME_TYPE, "application/pdf");
+            values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+
+            Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+            if (uri == null) { toast("Could not create file"); return; }
+
+            try (OutputStream out = getContentResolver().openOutputStream(uri)) {
+                out.write(body.bytes());
+            }
+            toast("Saved to Downloads: " + fileName);
+        } catch (Exception e) {
+            toast("Save failed: " + e.getMessage());
+        }
+    }
+
+    private void setLoading(boolean b) { progress.setVisibility(b ? View.VISIBLE : View.GONE); }
+    private void toast(String s) { Toast.makeText(this, s, Toast.LENGTH_LONG).show(); }
+}

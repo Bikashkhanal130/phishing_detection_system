@@ -1,0 +1,148 @@
+package com.example.phishingdetector.ui;
+
+import android.net.Uri;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.bumptech.glide.Glide;
+import com.example.phishingdetector.R;
+import com.example.phishingdetector.api.ApiClient;
+import com.example.phishingdetector.api.Models;
+import com.example.phishingdetector.util.SessionManager;
+import com.google.android.material.textfield.TextInputEditText;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class ProfileActivity extends AppCompatActivity {
+
+    private TextInputEditText etName, etEmail, etPhone, etBio;
+    private ImageView imgProfile;
+    private ProgressBar progress;
+    private SessionManager session;
+
+    private final ActivityResultLauncher<String> pickImage =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                if (uri != null) {
+                    imgProfile.setImageURI(uri);
+                    uploadImage(uri);
+                }
+            });
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_profile);
+        session = new SessionManager(this);
+
+        etName = findViewById(R.id.etName);
+        etEmail = findViewById(R.id.etEmail);
+        etPhone = findViewById(R.id.etPhone);
+        etBio = findViewById(R.id.etBio);
+        imgProfile = findViewById(R.id.imgProfile);
+        progress = findViewById(R.id.progress);
+
+        findViewById(R.id.btnPickImage).setOnClickListener(v -> pickImage.launch("image/*"));
+        findViewById(R.id.btnSave).setOnClickListener(v -> saveProfile());
+
+        loadProfile();
+    }
+
+    private void loadProfile() {
+        setLoading(true);
+        ApiClient.get().getProfile(session.bearer())
+                .enqueue(new Callback<Models.MessageResponse>() {
+                    @Override
+                    public void onResponse(Call<Models.MessageResponse> c, Response<Models.MessageResponse> res) {
+                        setLoading(false);
+                        Models.MessageResponse body = res.body();
+                        if (body != null && body.user != null) {
+                            Models.User u = body.user;
+                            etName.setText(u.fullName);
+                            etEmail.setText(u.email);
+                            etPhone.setText(u.phone);
+                            etBio.setText(u.bio);
+                            if (u.profileImage != null) {
+                                Glide.with(ProfileActivity.this)
+                                        .load(ApiClient.BASE_URL + "uploads/" + u.profileImage)
+                                        .into(imgProfile);
+                            }
+                        }
+                    }
+                    @Override
+                    public void onFailure(Call<Models.MessageResponse> c, Throwable t) {
+                        setLoading(false);
+                        toast("Could not load profile: " + t.getMessage());
+                    }
+                });
+    }
+
+    private void saveProfile() {
+        Models.ProfileUpdate u = new Models.ProfileUpdate();
+        u.fullName = etName.getText().toString().trim();
+        u.phone = etPhone.getText().toString().trim();
+        u.bio = etBio.getText().toString().trim();
+        setLoading(true);
+        ApiClient.get().updateProfile(session.bearer(), u)
+                .enqueue(new Callback<Models.MessageResponse>() {
+                    @Override
+                    public void onResponse(Call<Models.MessageResponse> c, Response<Models.MessageResponse> res) {
+                        setLoading(false);
+                        toast("Profile saved");
+                    }
+                    @Override
+                    public void onFailure(Call<Models.MessageResponse> c, Throwable t) {
+                        setLoading(false);
+                        toast("Save failed: " + t.getMessage());
+                    }
+                });
+    }
+
+    private void uploadImage(Uri uri) {
+        try {
+            File temp = new File(getCacheDir(), "upload.jpg");
+            try (InputStream in = getContentResolver().openInputStream(uri);
+                 FileOutputStream out = new FileOutputStream(temp)) {
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+            }
+            RequestBody rb = RequestBody.create(temp, MediaType.parse("image/*"));
+            MultipartBody.Part part = MultipartBody.Part.createFormData("image", "profile.jpg", rb);
+            setLoading(true);
+            ApiClient.get().uploadImage(session.bearer(), part)
+                    .enqueue(new Callback<Models.MessageResponse>() {
+                        @Override
+                        public void onResponse(Call<Models.MessageResponse> c, Response<Models.MessageResponse> res) {
+                            setLoading(false);
+                            toast("Photo updated");
+                        }
+                        @Override
+                        public void onFailure(Call<Models.MessageResponse> c, Throwable t) {
+                            setLoading(false);
+                            toast("Upload failed: " + t.getMessage());
+                        }
+                    });
+        } catch (Exception e) {
+            toast("Could not read image: " + e.getMessage());
+        }
+    }
+
+    private void setLoading(boolean b) { progress.setVisibility(b ? View.VISIBLE : View.GONE); }
+    private void toast(String s) { Toast.makeText(this, s, Toast.LENGTH_LONG).show(); }
+}
