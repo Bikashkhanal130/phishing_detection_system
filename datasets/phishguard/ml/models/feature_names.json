@@ -1,0 +1,17 @@
+[
+  "url_length",
+  "num_dots",
+  "num_hyphens",
+  "num_underscores",
+  "num_slashes",
+  "num_questionmarks",
+  "num_equals",
+  "num_at",
+  "num_ampersand",
+  "has_ip_address",
+  "is_https",
+  "domain_length",
+  "num_subdomains",
+  "has_suspicious_keywords",
+  "has_numbers_in_domain"
+]

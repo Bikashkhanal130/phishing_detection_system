@@ -1,0 +1,7 @@
+Alembic migrations for PhishGuard.
+
+Generate a migration after model changes:
+    alembic revision --autogenerate -m "message"
+
+Apply migrations:
+    alembic upgrade head

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- App-private cache dir used to stage the PDF before sharing/opening. -->
+    <cache-path name="pdf_cache" path="pdfs/" />
+    <external-cache-path name="ext_pdf_cache" path="pdfs/" />
+    <!-- Public Downloads (used on API <29 fallback paths). -->
+    <external-path name="downloads" path="Download/" />
+</paths>

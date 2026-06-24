@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -14,7 +16,7 @@ import com.example.phishingdetector.R;
 import com.example.phishingdetector.api.ApiClient;
 import com.example.phishingdetector.api.Models;
 import com.example.phishingdetector.util.SessionManager;
-import com.google.android.material.button.MaterialButton;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.textfield.TextInputEditText;
 
 import retrofit2.Call;
@@ -25,8 +27,9 @@ public class HomeActivity extends AppCompatActivity {
 
     private TextInputEditText etUrl;
     private ProgressBar progress;
-    private View resultCard;
-    private TextView tvResult, tvConfidence, tvCheckedUrl, tvWelcome;
+    private LinearLayout resultCard;
+    private TextView tvResult, tvConfidence, tvCheckedUrl, tvWelcome, tvAvatar;
+    private ImageView imgResultIcon;
     private SessionManager session;
 
     @Override
@@ -42,14 +45,32 @@ public class HomeActivity extends AppCompatActivity {
         tvConfidence = findViewById(R.id.tvConfidence);
         tvCheckedUrl = findViewById(R.id.tvCheckedUrl);
         tvWelcome = findViewById(R.id.tvWelcome);
-        tvWelcome.setText("Welcome, " + session.getName());
+        tvAvatar = findViewById(R.id.tvAvatar);
+        imgResultIcon = findViewById(R.id.imgResultIcon);
+
+        String name = session.getName();
+        tvWelcome.setText("Welcome, " + name + "!");
+        if (name != null && !name.isEmpty()) {
+            tvAvatar.setText(String.valueOf(name.charAt(0)).toUpperCase());
+        }
 
         findViewById(R.id.btnCheck).setOnClickListener(v -> checkUrl());
-        findViewById(R.id.btnHistory).setOnClickListener(v ->
-                startActivity(new Intent(this, HistoryActivity.class)));
-        findViewById(R.id.btnProfile).setOnClickListener(v ->
-                startActivity(new Intent(this, ProfileActivity.class)));
-        findViewById(R.id.btnLogout).setOnClickListener(v -> logout());
+
+        BottomNavigationView bottomNav = findViewById(R.id.bottomNav);
+        bottomNav.setSelectedItemId(R.id.nav_home);
+        bottomNav.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_history) {
+                startActivity(new Intent(this, HistoryActivity.class));
+                overridePendingTransition(0, 0);
+                return true;
+            } else if (id == R.id.nav_profile) {
+                startActivity(new Intent(this, ProfileActivity.class));
+                overridePendingTransition(0, 0);
+                return true;
+            }
+            return true;
+        });
     }
 
     private void checkUrl() {
@@ -84,9 +105,19 @@ public class HomeActivity extends AppCompatActivity {
     private void showResult(Models.PredictResponse r) {
         resultCard.setVisibility(View.VISIBLE);
         boolean phishing = r.isPhishing;
-        int color = phishing ? Color.parseColor("#C0392B") : Color.parseColor("#1E8E3E");
-        tvResult.setText(phishing ? "⚠ Phishing / Scam" : "✓ Safe");
-        tvResult.setTextColor(color);
+
+        if (phishing) {
+            tvResult.setText("Phishing / Scam");
+            tvResult.setTextColor(Color.parseColor("#C0392B"));
+            imgResultIcon.setImageResource(R.drawable.ic_warning_circle);
+            resultCard.setBackground(getDrawable(R.drawable.bg_result_danger));
+        } else {
+            tvResult.setText("Safe");
+            tvResult.setTextColor(Color.parseColor("#1E8E3E"));
+            imgResultIcon.setImageResource(R.drawable.ic_check_circle);
+            resultCard.setBackground(getDrawable(R.drawable.bg_result_safe));
+        }
+
         tvConfidence.setText("Confidence: " + String.format("%.1f", r.confidence) + "%");
         tvCheckedUrl.setText(r.url);
     }

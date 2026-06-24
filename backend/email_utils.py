@@ -1,16 +1,16 @@
 """
 email_utils.py
 --------------
-Sends the OTP code by email using plain SMTP.
+Sends the OTP code by email using your mail provider's SMTP server.
 
-DEV CONVENIENCE:
-If DEV_MODE is on, OR if you haven't filled in real SMTP credentials yet,
-the code is PRINTED IN THE TERMINAL instead of emailed. That lets you register
-and log in immediately without setting up Gmail. When you later put real SMTP
-details in your .env (and DEV_MODE is off), it sends a real email automatically.
+Behaviour:
+  * If you have filled in a real Gmail + App Password in config.py (or set the
+    SMTP_USER / SMTP_PASSWORD env vars), a REAL EMAIL is sent.
+  * If the placeholders are still there (or DEV_MODE=1), the code is printed in
+    the terminal instead, so testing never gets blocked.
 
-No separate server is ever created -- when it does send, it just connects to your
-mail provider's existing SMTP server, like any email client.
+No separate server is created -- it just connects to Gmail's existing SMTP
+server (smtp.gmail.com) the same way an email client does.
 """
 
 import os
@@ -22,6 +22,17 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from config import Config
+
+# Values that mean "not configured yet" -> fall back to printing in terminal.
+_PLACEHOLDERS = {
+    "",
+    "youremail@gmail.com",
+    "your-app-password",
+    "your-16-char-app-password",
+    "your-gmail@gmail.com",
+    "REPLACE_WITH_YOUR_GMAIL@gmail.com",
+    "REPLACE_WITH_YOUR_APP_PASSWORD",
+}
 
 
 def generate_otp(length: int = None) -> str:
@@ -38,35 +49,28 @@ def _dev_mode() -> bool:
 
 
 def _smtp_is_configured() -> bool:
-    """True only if real SMTP values were provided (not the placeholders)."""
     user = (Config.SMTP_USER or "").strip()
     pwd = (Config.SMTP_PASSWORD or "").strip()
-    placeholders = {"", "youremail@gmail.com", "your-app-password", "your-16-char-app-password"}
-    return user not in placeholders and pwd not in placeholders and "@" in user
+    return user not in _PLACEHOLDERS and pwd not in _PLACEHOLDERS and "@" in user
 
 
 def _print_code_to_console(to_email: str, code: str) -> None:
     line = "=" * 52
     print("\n" + line)
-    print(f"  DEV MODE -- verification code for {to_email}")
-    print(f"  CODE: {code}")
-    print(f"  (No email sent. Type this code into the app to verify.)")
+    print(f"  OTP for {to_email}: {code}")
+    print("  (Email not configured / DEV_MODE on -- type this code into the app.)")
     print(line + "\n", flush=True)
 
 
 def send_otp_email(to_email: str, code: str) -> None:
-    """Send the verification code, or print it to the console in dev mode.
-
-    Never raises in dev / unconfigured mode, so registration always succeeds
-    while you are testing locally.
-    """
+    """Send the verification code, or print it to the console if email isn't set up."""
     if _dev_mode() or not _smtp_is_configured():
         _print_code_to_console(to_email, code)
         return
 
     subject = "Your verification code"
     text = (
-        f"Your Phishing Detector verification code is: {code}\n\n"
+        f"Your {Config.SMTP_FROM_NAME} verification code is: {code}\n\n"
         f"This code expires in {Config.OTP_TTL_MINUTES} minutes.\n"
         f"If you did not request this, please ignore this email."
     )
@@ -90,11 +94,11 @@ def send_otp_email(to_email: str, code: str) -> None:
     msg.attach(MIMEText(html, "html"))
 
     context = ssl.create_default_context()
-    if Config.SMTP_PORT == 465:
+    if Config.SMTP_PORT == 465:                       # SSL
         with smtplib.SMTP_SSL(Config.SMTP_HOST, Config.SMTP_PORT, context=context) as server:
             server.login(Config.SMTP_USER, Config.SMTP_PASSWORD)
             server.sendmail(Config.SMTP_USER, to_email, msg.as_string())
-    else:  # e.g. port 587 (STARTTLS)
+    else:                                             # STARTTLS (e.g. port 587)
         with smtplib.SMTP(Config.SMTP_HOST, Config.SMTP_PORT) as server:
             server.starttls(context=context)
             server.login(Config.SMTP_USER, Config.SMTP_PASSWORD)

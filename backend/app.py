@@ -134,7 +134,10 @@ def verify_otp():
     email = (data.get("email") or "").strip().lower()
     code = (data.get("code") or "").strip()
 
-    otp = (OtpCode.query.filter_by(email=email, purpose="verify_email", used=False)
+    otp = (OtpCode.query
+           .filter(OtpCode.email == email,
+                   OtpCode.used == False,  # noqa: E712
+                   db.or_(OtpCode.purpose == "verify_email", OtpCode.purpose.is_(None)))
            .order_by(OtpCode.created_at.desc()).first())
     if not otp or not otp.is_valid(code):
         return jsonify({"error": "Invalid or expired code"}), 400

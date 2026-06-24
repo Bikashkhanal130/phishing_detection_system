@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="accent">#42A5F5</color>
+    <color name="background">#F5F7FA</color>
+    <color name="black">#000000</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="divider">#E0E0E0</color>
+    <color name="ic_launcher_background">#1565C0</color>
+    <color name="phishing_red">#C62828</color>
+    <color name="phishing_red_bg">#FFEBEE</color>
+    <color name="primary">#1565C0</color>
+    <color name="primary_dark">#0D47A1</color>
+    <color name="safe_green">#2E7D32</color>
+    <color name="safe_green_bg">#E8F5E9</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="white">#FFFFFF</color>
+    <string name="app_name">PhishGuard</string>
+    <string name="code_sent_to">Code sent to %1$s</string>
+    <string name="download_pdf">Download PDF</string>
+    <string name="email_hint">Email address</string>
+    <string name="have_account">Already have an account? Sign in</string>
+    <string name="login_subtitle">Sign in with a one-time code</string>
+    <string name="login_title">Welcome back</string>
+    <string name="logout">Logout</string>
+    <string name="name_hint">Full name</string>
+    <string name="no_account">Don\'t have an account? Register</string>
+    <string name="phishing_found">Phishing Found</string>
+    <string name="register_title">Create account</string>
+    <string name="resend_otp">Resend OTP</string>
+    <string name="result_phishing">PHISHING</string>
+    <string name="result_safe">SAFE</string>
+    <string name="safe_urls">Safe URLs</string>
+    <string name="scan_url">Scan URL</string>
+    <string name="send_otp">Send OTP</string>
+    <string name="tab_profile">Profile</string>
+    <string name="tab_scanner">Scanner</string>
+    <string name="total_scans">Total Scans</string>
+    <string name="url_hint">Enter a URL to scan</string>
+    <string name="verify_code">Verify Code</string>
+    <style name="OtpBox">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="android:layout_margin">4dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:inputType">number</item>
+        <item name="android:maxLength">1</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:background">@drawable/otp_box_bg</item>
+    </style>
+    <style name="Theme.PhishGuard" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorSecondary">@color/accent</item>
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/primary_dark</item>
+    </style>
+</resources>

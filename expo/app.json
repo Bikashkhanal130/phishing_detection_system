@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Phishing Detector",
+    "slug": "phishing-detector",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.example.phishingdetector"
+    },
+    "android": {
+      "package": "com.example.phishingdetector"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Phishing Detector to access your photos for profile pictures."
+        }
+      ]
+    ]
+  }
+}

@@ -1,5 +1,6 @@
 package com.example.phishingdetector.ui;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -16,6 +17,8 @@ import com.example.phishingdetector.R;
 import com.example.phishingdetector.api.ApiClient;
 import com.example.phishingdetector.api.Models;
 import com.example.phishingdetector.util.SessionManager;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.io.File;
@@ -50,6 +53,9 @@ public class ProfileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_profile);
         session = new SessionManager(this);
 
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setNavigationOnClickListener(v -> finish());
+
         etName = findViewById(R.id.etName);
         etEmail = findViewById(R.id.etEmail);
         etPhone = findViewById(R.id.etPhone);
@@ -59,6 +65,24 @@ public class ProfileActivity extends AppCompatActivity {
 
         findViewById(R.id.btnPickImage).setOnClickListener(v -> pickImage.launch("image/*"));
         findViewById(R.id.btnSave).setOnClickListener(v -> saveProfile());
+        findViewById(R.id.btnLogout).setOnClickListener(v -> logout());
+
+        BottomNavigationView bottomNav = findViewById(R.id.bottomNav);
+        bottomNav.setSelectedItemId(R.id.nav_profile);
+        bottomNav.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_home) {
+                startActivity(new Intent(this, HomeActivity.class));
+                overridePendingTransition(0, 0);
+                finish();
+                return true;
+            } else if (id == R.id.nav_history) {
+                startActivity(new Intent(this, HistoryActivity.class));
+                overridePendingTransition(0, 0);
+                return true;
+            }
+            return true;
+        });
 
         loadProfile();
     }
@@ -80,6 +104,7 @@ public class ProfileActivity extends AppCompatActivity {
                             if (u.profileImage != null) {
                                 Glide.with(ProfileActivity.this)
                                         .load(ApiClient.BASE_URL + "uploads/" + u.profileImage)
+                                        .circleCrop()
                                         .into(imgProfile);
                             }
                         }
@@ -141,6 +166,14 @@ public class ProfileActivity extends AppCompatActivity {
         } catch (Exception e) {
             toast("Could not read image: " + e.getMessage());
         }
+    }
+
+    private void logout() {
+        session.logout();
+        Intent i = new Intent(this, LoginActivity.class);
+        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(i);
+        finish();
     }
 
     private void setLoading(boolean b) { progress.setVisibility(b ? View.VISIBLE : View.GONE); }

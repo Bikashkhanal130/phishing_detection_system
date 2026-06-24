@@ -1,0 +1,40 @@
+com.phishguard.app-lifecycle-livedata-core-2.7.0-0 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\0247fb4fc4cec2daad001fabe7485f97\transformed\lifecycle-livedata-core-2.7.0\res
+com.phishguard.app-cardview-1.0.0-1 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\0d86633ddd3fcf38ac9d4a844b12471c\transformed\cardview-1.0.0\res
+com.phishguard.app-drawerlayout-1.1.1-2 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\0fd8639685d4eeca66b5cd7a0ad508a9\transformed\drawerlayout-1.1.1\res
+com.phishguard.app-appcompat-resources-1.6.1-3 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\1235c38eab1bdbeaacc24a15d02a803d\transformed\appcompat-resources-1.6.1\res
+com.phishguard.app-annotation-experimental-1.3.0-4 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\18d5113299b47d4246bb241965eb1145\transformed\annotation-experimental-1.3.0\res
+com.phishguard.app-emoji2-views-helper-1.2.0-5 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\1d27728de1ed431fdca4ee1626d6fc7b\transformed\emoji2-views-helper-1.2.0\res
+com.phishguard.app-lifecycle-runtime-2.7.0-6 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\1fc16e029cad5b00831fc46cca9ffa7d\transformed\lifecycle-runtime-2.7.0\res
+com.phishguard.app-coordinatorlayout-1.1.0-7 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\34cb538c3166e523c8910746b79e1684\transformed\coordinatorlayout-1.1.0\res
+com.phishguard.app-lifecycle-livedata-core-ktx-2.7.0-8 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\4093aab42bfa3b5c44290281a453f3f8\transformed\lifecycle-livedata-core-ktx-2.7.0\res
+com.phishguard.app-startup-runtime-1.1.1-9 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\583d207fa288eb1cafe51447bf3b5ec0\transformed\startup-runtime-1.1.1\res
+com.phishguard.app-constraintlayout-2.1.4-10 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\594632abcafe11eff1d8a7253d12d966\transformed\constraintlayout-2.1.4\res
+com.phishguard.app-core-runtime-2.2.0-11 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\5aa0aa1a5144f4be327e30812b076777\transformed\core-runtime-2.2.0\res
+com.phishguard.app-transition-1.2.0-12 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\62318d775059284dd99b4b768d1ba02d\transformed\transition-1.2.0\res
+com.phishguard.app-fragment-1.6.2-13 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\636728b6caceabde81080b33da818679\transformed\fragment-1.6.2\res
+com.phishguard.app-core-ktx-1.9.0-14 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\66d64174eb525e5722a23256de545919\transformed\core-ktx-1.9.0\res
+com.phishguard.app-sqlite-2.4.0-15 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\6fcabbb1ba3f311db01d732f154f1075\transformed\sqlite-2.4.0\res
+com.phishguard.app-lifecycle-livedata-2.7.0-16 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\7709980a6b4a4e187a4b09f776ffa63c\transformed\lifecycle-livedata-2.7.0\res
+com.phishguard.app-activity-1.8.0-17 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\7bc3e9e7a724135ec817e6f26b362341\transformed\activity-1.8.0\res
+com.phishguard.app-core-1.9.0-18 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\7e7086c419c93c07d9ba425f4911a705\transformed\core-1.9.0\res
+com.phishguard.app-room-runtime-2.6.1-19 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\8162cac102842cd25a7783ab17738d48\transformed\room-runtime-2.6.1\res
+com.phishguard.app-material-1.11.0-20 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\a0178ebb20fecee6fcfd58073a8ab1a4\transformed\material-1.11.0\res
+com.phishguard.app-appcompat-1.6.1-21 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\afb163e599d9ac7edf990af203f1af39\transformed\appcompat-1.6.1\res
+com.phishguard.app-emoji2-1.2.0-22 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\be3f47d8876869e37454b7d0df32d491\transformed\emoji2-1.2.0\res
+com.phishguard.app-lifecycle-viewmodel-2.7.0-23 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\d24100b741f97328e51f889475164822\transformed\lifecycle-viewmodel-2.7.0\res
+com.phishguard.app-viewpager2-1.1.0-beta02-24 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\d3316d07022997a6917bb1995ad65ab0\transformed\viewpager2-1.1.0-beta02\res
+com.phishguard.app-savedstate-1.2.1-25 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\d504826858ea67e08559f2f585fd6942\transformed\savedstate-1.2.1\res
+com.phishguard.app-lifecycle-viewmodel-savedstate-2.7.0-26 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\d68d688b7f9140bd56f9c86849676feb\transformed\lifecycle-viewmodel-savedstate-2.7.0\res
+com.phishguard.app-profileinstaller-1.3.0-27 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\d7042d0fc188ec4c691f157700d4a2e2\transformed\profileinstaller-1.3.0\res
+com.phishguard.app-security-crypto-1.1.0-alpha06-28 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\db5cf0e1d15a34aa571637d6a16bdee7\transformed\security-crypto-1.1.0-alpha06\res
+com.phishguard.app-customview-poolingcontainer-1.0.0-29 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\e0ec662c9724cf9c0aec14d77dc3e079\transformed\customview-poolingcontainer-1.0.0\res
+com.phishguard.app-recyclerview-1.3.2-30 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\e30ffa2aac490cd3a1ee662cf05525bc\transformed\recyclerview-1.3.2\res
+com.phishguard.app-sqlite-framework-2.4.0-31 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\e3ac3f647b92823aa499888095123258\transformed\sqlite-framework-2.4.0\res
+com.phishguard.app-lifecycle-process-2.7.0-32 C:\Users\Bikash\.gradle\caches\8.10.2\transforms\e832a27a8089b0f99cf02e36fe782924\transformed\lifecycle-process-2.7.0\res
+com.phishguard.app-pngs-33 D:\project 8th sem source code\phishguard\android\app\build\generated\res\pngs\debug
+com.phishguard.app-resValues-34 D:\project 8th sem source code\phishguard\android\app\build\generated\res\resValues\debug
+com.phishguard.app-packageDebugResources-35 D:\project 8th sem source code\phishguard\android\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.phishguard.app-packageDebugResources-36 D:\project 8th sem source code\phishguard\android\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.phishguard.app-debug-37 D:\project 8th sem source code\phishguard\android\app\build\intermediates\merged_res\debug\mergeDebugResources
+com.phishguard.app-debug-38 D:\project 8th sem source code\phishguard\android\app\src\debug\res
+com.phishguard.app-main-39 D:\project 8th sem source code\phishguard\android\app\src\main\res

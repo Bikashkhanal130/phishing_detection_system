@@ -14,6 +14,7 @@ import com.example.phishingdetector.api.Models;
 import com.example.phishingdetector.util.SessionManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.gson.Gson;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -61,17 +62,27 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(Call<Models.AuthResponse> call, Response<Models.AuthResponse> res) {
                         setLoading(false);
-                        Models.AuthResponse body = res.body();
-                        if (res.isSuccessful() && body != null && body.token != null) {
-                            session.save(body.token, body.user.fullName, body.user.email);
-                            goHome();
-                        } else if (body != null && body.needVerification) {
-                            // backend re-sent a code; go verify
-                            Intent i = new Intent(LoginActivity.this, OtpActivity.class);
-                            i.putExtra("email", body.email != null ? body.email : email);
-                            startActivity(i);
-                        } else {
-                            toast(body != null && body.error != null ? body.error : "Login failed");
+                        if (res.isSuccessful()) {
+                            Models.AuthResponse body = res.body();
+                            if (body != null && body.token != null) {
+                                session.save(body.token, body.user.fullName, body.user.email);
+                                goHome();
+                                return;
+                            }
+                        }
+                        // Handle error body (403 with need_verification, etc.)
+                        try {
+                            String errJson = res.errorBody() != null ? res.errorBody().string() : "{}";
+                            Models.AuthResponse err = new Gson().fromJson(errJson, Models.AuthResponse.class);
+                            if (err.needVerification) {
+                                Intent i = new Intent(LoginActivity.this, OtpActivity.class);
+                                i.putExtra("email", err.email != null ? err.email : email);
+                                startActivity(i);
+                                return;
+                            }
+                            toast(err.error != null ? err.error : "Login failed");
+                        } catch (Exception e) {
+                            toast("Login failed");
                         }
                     }
                     @Override

@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">PhishGuard</string>
+
+    <!-- Auth -->
+    <string name="login_title">Welcome back</string>
+    <string name="login_subtitle">Sign in with a one-time code</string>
+    <string name="email_hint">Email address</string>
+    <string name="name_hint">Full name</string>
+    <string name="send_otp">Send OTP</string>
+    <string name="no_account">Don\'t have an account? Register</string>
+    <string name="have_account">Already have an account? Sign in</string>
+    <string name="register_title">Create account</string>
+    <string name="verify_code">Verify Code</string>
+    <string name="resend_otp">Resend OTP</string>
+    <string name="code_sent_to">Code sent to %1$s</string>
+
+    <!-- Scanner -->
+    <string name="url_hint">Enter a URL to scan</string>
+    <string name="scan_url">Scan URL</string>
+    <string name="result_safe">SAFE</string>
+    <string name="result_phishing">PHISHING</string>
+
+    <!-- Profile -->
+    <string name="total_scans">Total Scans</string>
+    <string name="phishing_found">Phishing Found</string>
+    <string name="safe_urls">Safe URLs</string>
+    <string name="download_pdf">Download PDF</string>
+    <string name="logout">Logout</string>
+
+    <!-- Nav -->
+    <string name="tab_scanner">Scanner</string>
+    <string name="tab_profile">Profile</string>
+</resources>

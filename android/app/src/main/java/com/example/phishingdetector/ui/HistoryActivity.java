@@ -1,11 +1,13 @@
 package com.example.phishingdetector.ui;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.net.Uri;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,6 +21,7 @@ import com.example.phishingdetector.api.ApiClient;
 import com.example.phishingdetector.api.Models;
 import com.example.phishingdetector.util.SessionManager;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -33,7 +36,7 @@ public class HistoryActivity extends AppCompatActivity {
 
     private RecyclerView recycler;
     private ProgressBar progress;
-    private TextView tvEmpty;
+    private LinearLayout layoutEmpty;
     private SessionManager session;
     private final List<Models.HistoryItem> items = new ArrayList<>();
 
@@ -48,11 +51,29 @@ public class HistoryActivity extends AppCompatActivity {
 
         recycler = findViewById(R.id.recycler);
         progress = findViewById(R.id.progress);
-        tvEmpty = findViewById(R.id.tvEmpty);
+        layoutEmpty = findViewById(R.id.layoutEmpty);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         recycler.setAdapter(new HistoryAdapter(items));
 
         findViewById(R.id.btnDownloadPdf).setOnClickListener(v -> downloadPdf());
+
+        BottomNavigationView bottomNav = findViewById(R.id.bottomNav);
+        bottomNav.setSelectedItemId(R.id.nav_history);
+        bottomNav.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_home) {
+                startActivity(new Intent(this, HomeActivity.class));
+                overridePendingTransition(0, 0);
+                finish();
+                return true;
+            } else if (id == R.id.nav_profile) {
+                startActivity(new Intent(this, ProfileActivity.class));
+                overridePendingTransition(0, 0);
+                return true;
+            }
+            return true;
+        });
+
         loadHistory();
     }
 
@@ -68,7 +89,8 @@ public class HistoryActivity extends AppCompatActivity {
                             items.clear();
                             items.addAll(body.history);
                             recycler.getAdapter().notifyDataSetChanged();
-                            tvEmpty.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
+                            layoutEmpty.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
+                            recycler.setVisibility(items.isEmpty() ? View.GONE : View.VISIBLE);
                         }
                     }
                     @Override
@@ -100,9 +122,8 @@ public class HistoryActivity extends AppCompatActivity {
                 });
     }
 
-    /** Saves the PDF bytes into the public Downloads folder (MediaStore, no permission needed). */
     private void savePdfToDownloads(ResponseBody body) {
-        String fileName = "search_history_" + System.currentTimeMillis() + ".pdf";
+        String fileName = "scan_history_" + System.currentTimeMillis() + ".pdf";
         try {
             ContentValues values = new ContentValues();
             values.put(MediaStore.Downloads.DISPLAY_NAME, fileName);
