@@ -22,9 +22,11 @@ Run:
 """
 
 import os
+import re
 import uuid
 from datetime import datetime, timedelta
 from functools import wraps
+from urllib.parse import urlparse
 
 import jwt
 import joblib
@@ -35,8 +37,16 @@ from werkzeug.utils import secure_filename
 from config import Config
 from database import OtpCode, SearchHistory, User, db
 from email_utils import generate_otp, otp_expiry, send_otp_email
-from feature_extraction import vectorize
+from feature_extraction import vectorize, extract_features
 from pdf_utils import build_history_pdf
+
+def _normalize_url(url: str) -> str:
+    """Ensure the URL has a scheme so the model can always parse it.
+    Accepts bare domains (google.com), IPs, and full URLs alike."""
+    url = url.strip()
+    if url and not re.match(r"^[a-zA-Z][a-zA-Z0-9+.\-]*://", url):
+        url = "http://" + url
+    return url
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -52,7 +62,7 @@ with app.app_context():
     db.create_all()
 
 # ---- Load the trained model once at startup ----
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "phishing_model.joblib")
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "l.joblib")
 _bundle = None
 if os.path.exists(MODEL_PATH):
     _bundle = joblib.load(MODEL_PATH)
@@ -247,13 +257,24 @@ def predict(user):
     data = request.get_json(force=True, silent=True) or {}
     url = (data.get("url") or "").strip()
     if not url:
-        return jsonify({"error": "Provide a 'url'"}), 400
+        return jsonify({"error": "Please enter a URL to check"}), 400
+
+    url = _normalize_url(url)
 
     model = _bundle["model"]
+    feat_dict = extract_features(url)
     features = [vectorize(url)]
     pred = int(model.predict(features)[0])             # 1 = phishing, 0 = safe
     proba = model.predict_proba(features)[0]
     confidence = float(proba[pred]) * 100.0
+
+    # Belt-and-suspenders: if the model says Safe but lexical brand-safety
+    # features flag an impersonation, override to Phishing.  HTTPS alone is
+    # not proof of legitimacy — phishing sites get free SSL certs trivially.
+    if pred == 0 and (feat_dict.get("brand_typosquat") or feat_dict.get("brand_in_subdomain")):
+        pred = 1
+        confidence = max(confidence, 85.0)
+
     result = "Phishing" if pred == 1 else "Safe"
 
     record = SearchHistory(user_id=user.id, url=url, result=result, confidence=confidence)

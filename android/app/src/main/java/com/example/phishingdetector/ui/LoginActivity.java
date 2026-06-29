@@ -29,14 +29,15 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
         session = new SessionManager(this);
 
-        // already logged in? skip to home
+        // Check session BEFORE inflating the login layout to avoid unnecessary work
         if (session.isLoggedIn()) {
             goHome();
             return;
         }
+
+        setContentView(R.layout.activity_login);
 
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);

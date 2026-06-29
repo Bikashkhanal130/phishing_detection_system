@@ -12,6 +12,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -136,9 +137,28 @@ public class HistoryActivity extends AppCompatActivity {
             try (OutputStream out = getContentResolver().openOutputStream(uri)) {
                 out.write(body.bytes());
             }
-            toast("Saved to Downloads: " + fileName);
+
+            // Offer to open the file immediately after download
+            new AlertDialog.Builder(this)
+                    .setTitle("Download complete")
+                    .setMessage(fileName + "\nSaved to Downloads folder.")
+                    .setPositiveButton("Open", (d, w) -> openPdf(uri))
+                    .setNegativeButton("Cancel", null)
+                    .show();
+
         } catch (Exception e) {
             toast("Save failed: " + e.getMessage());
+        }
+    }
+
+    private void openPdf(Uri uri) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(uri, "application/pdf");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(intent, "Open PDF with…"));
+        } catch (Exception e) {
+            toast("No PDF viewer found. File is in your Downloads folder.");
         }
     }
 

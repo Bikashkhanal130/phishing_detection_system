@@ -7,8 +7,19 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="vertical" android:gravity="center"
         android:padding="24dp">
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="🛡️" android:textSize="56sp" android:layout_marginBottom="8dp"/>
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            app:cardCornerRadius="36dp"
+            app:cardBackgroundColor="@color/primary"
+            app:cardElevation="4dp"
+            android:layout_marginBottom="8dp">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_shield_white"
+                android:padding="16dp"/>
+        </com.google.android.material.card.MaterialCardView>
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="Phishing Detector" android:textSize="26sp"
             android:textStyle="bold" android:textColor="@color/text"/>
@@ -26,7 +37,7 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:hint="Password" app:passwordToggleEnabled="true"
+            android:hint="Password" app:endIconMode="password_toggle"
             android:layout_marginTop="12dp"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
             <com.google.android.material.textfield.TextInputEditText

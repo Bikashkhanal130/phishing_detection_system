@@ -10,6 +10,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.phishingdetector.R;
@@ -74,8 +76,12 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void checkUrl() {
-        String url = etUrl.getText().toString().trim();
-        if (url.isEmpty()) { toast("Enter a URL"); return; }
+        String raw = etUrl.getText().toString().trim();
+        if (raw.isEmpty()) { toast("Enter a URL"); return; }
+
+        // Auto-add scheme so bare domains like "google.com" work
+        String url = raw.matches("(?i)^[a-z][a-z0-9+.\\-]*://.*") ? raw : "http://" + raw;
+
         setLoading(true);
         resultCard.setVisibility(View.GONE);
 
@@ -84,20 +90,29 @@ public class HomeActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(Call<Models.PredictResponse> c, Response<Models.PredictResponse> res) {
                         setLoading(false);
-                        Models.PredictResponse body = res.body();
-                        if (res.isSuccessful() && body != null && body.error == null) {
-                            showResult(body);
+                        if (res.isSuccessful()) {
+                            Models.PredictResponse body = res.body();
+                            if (body != null) showResult(body);
                         } else if (res.code() == 401) {
                             toast("Session expired, please log in again");
                             logout();
                         } else {
-                            toast(body != null && body.error != null ? body.error : "Check failed");
+                            // For error responses (4xx/5xx) the body is in errorBody(), not body()
+                            String msg = "Check failed";
+                            try {
+                                if (res.errorBody() != null) {
+                                    Models.PredictResponse err = new Gson().fromJson(
+                                            res.errorBody().string(), Models.PredictResponse.class);
+                                    if (err != null && err.error != null) msg = err.error;
+                                }
+                            } catch (Exception ignored) {}
+                            toast(msg);
                         }
                     }
                     @Override
                     public void onFailure(Call<Models.PredictResponse> c, Throwable t) {
                         setLoading(false);
-                        toast("Network error: " + t.getMessage());
+                        toast("Could not reach server. Check your connection.");
                     }
                 });
     }

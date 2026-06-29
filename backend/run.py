@@ -110,8 +110,21 @@ os.environ.setdefault("SECRET_KEY", "dev-secret-change-me")
 # ------------------------------------------------------------------ #
 MODEL_PATH = os.path.join(HERE, "model", "phishing_model.joblib")
 if not os.path.exists(MODEL_PATH):
-    print("No trained model found -- training on sample_dataset.csv ...")
-    result = subprocess.run([sys.executable, os.path.join(HERE, "train_model.py")])
+    # Prefer the merged real-world dataset; fall back to the tiny sample.
+    MERGED_DATASET  = os.path.join(HERE, "merged_dataset.csv")
+    SAMPLE_DATASET  = os.path.join(HERE, "sample_dataset.csv")
+
+    if not os.path.exists(MERGED_DATASET):
+        print("Preparing merged dataset from upstream sources ...")
+        prep = subprocess.run([sys.executable, os.path.join(HERE, "prepare_datasets.py")])
+        if prep.returncode != 0:
+            print("(Dataset preparation failed -- will try sample_dataset.csv as fallback)")
+
+    data_file = MERGED_DATASET if os.path.exists(MERGED_DATASET) else SAMPLE_DATASET
+    print(f"No trained model found -- training on {os.path.basename(data_file)} ...")
+    result = subprocess.run(
+        [sys.executable, os.path.join(HERE, "train_model.py"), "--data", data_file]
+    )
     if result.returncode != 0:
         print("(Training failed -- login/register still work; URL checking disabled.)")
 
