@@ -44,10 +44,13 @@ public class LoginActivity extends AppCompatActivity {
         progress = findViewById(R.id.progress);
         MaterialButton btnLogin = findViewById(R.id.btnLogin);
         MaterialButton btnGoRegister = findViewById(R.id.btnGoRegister);
+        MaterialButton btnForgotPassword = findViewById(R.id.btnForgotPassword);
 
         btnLogin.setOnClickListener(v -> doLogin());
         btnGoRegister.setOnClickListener(v ->
                 startActivity(new Intent(this, RegisterActivity.class)));
+        btnForgotPassword.setOnClickListener(v ->
+                startActivity(new Intent(this, ForgotPasswordActivity.class)));
     }
 
     private void doLogin() {

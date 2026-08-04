@@ -62,23 +62,31 @@ def _print_code_to_console(to_email: str, code: str) -> None:
     print(line + "\n", flush=True)
 
 
-def send_otp_email(to_email: str, code: str) -> None:
-    """Send the verification code, or print it to the console if email isn't set up."""
+def send_otp_email(to_email: str, code: str, purpose: str = "verify_email") -> None:
+    """Send the OTP code, or print it to the console if email isn't set up.
+    purpose: "verify_email" (default) or "reset_password" -- only changes wording."""
     if _dev_mode() or not _smtp_is_configured():
         _print_code_to_console(to_email, code)
         return
 
-    subject = "Your verification code"
+    is_reset = purpose == "reset_password"
+    subject = "Your password reset code" if is_reset else "Your verification code"
+    heading = "Reset your password" if is_reset else "Verify your email"
+    intro = (
+        "Use this code to reset your password:" if is_reset
+        else "Use this code to finish setting up your account:"
+    )
     text = (
-        f"Your {Config.SMTP_FROM_NAME} verification code is: {code}\n\n"
+        f"Your {Config.SMTP_FROM_NAME} {'password reset' if is_reset else 'verification'} "
+        f"code is: {code}\n\n"
         f"This code expires in {Config.OTP_TTL_MINUTES} minutes.\n"
         f"If you did not request this, please ignore this email."
     )
     html = f"""
     <div style="font-family:Arial,sans-serif;max-width:420px;margin:auto;
                 border:1px solid #eee;border-radius:12px;padding:24px">
-      <h2 style="color:#1f6feb;margin-top:0">Verify your email</h2>
-      <p>Use this code to finish setting up your account:</p>
+      <h2 style="color:#1f6feb;margin-top:0">{heading}</h2>
+      <p>{intro}</p>
       <p style="font-size:32px;font-weight:bold;letter-spacing:6px;
                 color:#111;background:#f4f6fb;padding:14px;border-radius:8px;
                 text-align:center">{code}</p>

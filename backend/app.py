@@ -7,6 +7,8 @@ Endpoints (all JSON unless noted):
   POST /api/register          -> create account (unverified) + email an OTP
   POST /api/verify-otp        -> verify email with the code
   POST /api/resend-otp        -> send a fresh code
+  POST /api/forgot-password   -> email a password-reset code
+  POST /api/reset-password    -> verify code + set a new password
   POST /api/login             -> returns a JWT token
   GET  /api/profile           -> current user's profile          (auth)
   PUT  /api/profile           -> update name/phone/bio            (auth)
@@ -62,12 +64,21 @@ with app.app_context():
     db.create_all()
 
 # ---- Load the trained model once at startup ----
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "l.joblib")
+HERE = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(HERE, "model", "phishing_model.joblib")
+_alt_model_path = os.path.join(HERE, "model", "l.joblib")
 _bundle = None
-if os.path.exists(MODEL_PATH):
-    _bundle = joblib.load(MODEL_PATH)
-    print(f"Loaded model (test accuracy {_bundle.get('accuracy', 0)*100:.2f}%)")
-else:
+
+for candidate in (MODEL_PATH, _alt_model_path):
+    if os.path.exists(candidate):
+        try:
+            _bundle = joblib.load(candidate)
+            print(f"Loaded model from {candidate} (test accuracy {_bundle.get('accuracy', 0) * 100:.2f}%)")
+            break
+        except Exception as exc:
+            print(f"WARNING: failed to load model from {candidate}: {exc}")
+
+if _bundle is None:
     print("WARNING: model not found. Run `python train_model.py` first.")
 
 
@@ -179,6 +190,56 @@ def resend_otp():
     return jsonify({"message": "A new code was sent"})
 
 
+@app.post("/api/forgot-password")
+def forgot_password():
+    data = request.get_json(force=True, silent=True) or {}
+    email = (data.get("email") or "").strip().lower()
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"error": "No account for this email"}), 404
+
+    code = generate_otp()
+    db.session.add(OtpCode(email=email, code=code, purpose="reset_password", expires_at=otp_expiry()))
+    db.session.commit()
+    try:
+        send_otp_email(email, code, purpose="reset_password")
+    except Exception as e:
+        return jsonify({"error": f"Email failed: {e}"}), 502
+
+    return jsonify({"message": "A reset code was sent to your email", "email": email})
+
+
+@app.post("/api/reset-password")
+def reset_password():
+    data = request.get_json(force=True, silent=True) or {}
+    email = (data.get("email") or "").strip().lower()
+    code = (data.get("code") or "").strip()
+    new_password = data.get("new_password") or ""
+
+    if len(new_password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters"}), 400
+
+    otp = (OtpCode.query
+           .filter(OtpCode.email == email, OtpCode.used == False,  # noqa: E712
+                   OtpCode.purpose == "reset_password")
+           .order_by(OtpCode.created_at.desc()).first())
+    if not otp or not otp.is_valid(code):
+        return jsonify({"error": "Invalid or expired code"}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    otp.used = True
+    user.set_password(new_password)
+    db.session.commit()
+
+    return jsonify({"message": "Password reset. Please log in with your new password."})
+
+
 @app.post("/api/login")
 def login():
     data = request.get_json(force=True, silent=True) or {}
@@ -253,7 +314,10 @@ def serve_upload(filename):
 @token_required
 def predict(user):
     if _bundle is None:
-        return jsonify({"error": "Model not loaded. Train it first."}), 503
+        return jsonify({
+            "error": "Model not loaded. The backend model file is missing. Run `python train_model.py` first.",
+            "model_loaded": False,
+        }), 503
     data = request.get_json(force=True, silent=True) or {}
     url = (data.get("url") or "").strip()
     if not url:
@@ -299,12 +363,29 @@ def history(user):
     return jsonify({"history": [h.to_dict() for h in items], "count": len(items)})
 
 
+def _clamp(value, low, high):
+    return max(low, min(high, value))
+
+
 @app.get("/api/history/pdf")
 @token_required
 def history_pdf(user):
     items = (SearchHistory.query.filter_by(user_id=user.id)
              .order_by(SearchHistory.created_at.desc()).all())
-    pdf_bytes = build_history_pdf(user, items)
+
+    # Optional screen size (in points/dp) from the app so the PDF page
+    # matches the phone it's being opened on instead of a fixed A4 sheet.
+    page_width = page_height = None
+    try:
+        w = request.args.get("w", type=float)
+        h = request.args.get("h", type=float)
+        if w and h:
+            page_width = _clamp(w, 250, 700)
+            page_height = _clamp(h, 400, 1400)
+    except (TypeError, ValueError):
+        pass
+
+    pdf_bytes = build_history_pdf(user, items, page_width=page_width, page_height=page_height)
     import io
     return send_file(
         io.BytesIO(pdf_bytes),

@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Alert,
+  ActivityIndicator, Alert, Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import api, { BASE_URL } from '../api/client';
@@ -59,8 +60,13 @@ export default function HistoryScreen() {
     try {
       const token = await session.getToken();
       const dest = FileSystem.documentDirectory + `history_${Date.now()}.pdf`;
+      // Send this device's screen size so the server can shape the PDF page
+      // to match it — it fills the screen edge-to-edge instead of showing
+      // as a cramped A4 sheet with dead space on a phone.
+      const { width, height } = Dimensions.get('window');
+      const url = `${BASE_URL}/api/history/pdf?w=${Math.round(width)}&h=${Math.round(height)}`;
       const { status, uri } = await FileSystem.downloadAsync(
-        `${BASE_URL}/api/history/pdf`, dest,
+        url, dest,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (status === 200) {
@@ -84,10 +90,20 @@ export default function HistoryScreen() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <Text style={s.headerTitle}>Scan History</Text>
-        <TouchableOpacity style={s.pdfBtn} onPress={exportPdf} disabled={downloading}>
+        <TouchableOpacity
+          style={s.pdfBtn}
+          onPress={exportPdf}
+          disabled={downloading}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
           {downloading
-            ? <ActivityIndicator color="#fff" size="small" />
-            : <Text style={s.pdfBtnText}>Export PDF</Text>}
+            ? <ActivityIndicator color={C.primary} size="small" />
+            : (
+              <>
+                <Ionicons name="download-outline" size={22} color={C.primary} />
+                <Text style={s.pdfBtnText}>Export PDF</Text>
+              </>
+            )}
         </TouchableOpacity>
       </View>
 
@@ -121,10 +137,12 @@ const s = StyleSheet.create({
   },
   headerTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   pdfBtn: {
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.6)', borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 5,
+    flexDirection: 'row', alignItems: 'center', gap: 7,
+    minHeight: 48, backgroundColor: '#fff', borderRadius: 24,
+    paddingHorizontal: 18, paddingVertical: 12,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 3, elevation: 3,
   },
-  pdfBtnText: { color: '#fff', fontSize: 12 },
+  pdfBtnText: { color: C.primary, fontSize: 16, fontWeight: '700' },
   list: { padding: 10, paddingBottom: 24 },
   row: {
     backgroundColor: C.surface, borderRadius: 12, padding: 12, marginBottom: 8,

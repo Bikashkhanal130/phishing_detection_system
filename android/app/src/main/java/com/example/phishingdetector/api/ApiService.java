@@ -27,6 +27,12 @@ public interface ApiService {
     @POST("api/login")
     Call<Models.AuthResponse> login(@Body Models.LoginRequest body);
 
+    @POST("api/forgot-password")
+    Call<Models.MessageResponse> forgotPassword(@Body Models.EmailRequest body);
+
+    @POST("api/reset-password")
+    Call<Models.MessageResponse> resetPassword(@Body Models.ResetPasswordRequest body);
+
     @GET("api/profile")
     Call<Models.MessageResponse> getProfile(@Header("Authorization") String bearer);
 

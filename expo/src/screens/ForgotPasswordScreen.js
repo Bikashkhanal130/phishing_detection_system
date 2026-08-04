@@ -1,33 +1,27 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../api/client';
-import session from '../storage/session';
-import { AuthContext } from '../../App';
 
 const C = { primary: '#1F6FEB', bg: '#F0F4FF', surface: '#FFFFFF', text: '#111418', muted: '#6B7280', border: '#E2E8F0' };
 
-export default function LoginScreen({ navigation }) {
-  const { setLoggedIn } = useContext(AuthContext);
+export default function ForgotPasswordScreen({ navigation }) {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function doLogin() {
-    if (!email.trim() || !password) { Alert.alert('Error', 'Enter email and password'); return; }
+  async function sendCode() {
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed) { Alert.alert('Error', 'Enter your account email'); return; }
     setLoading(true);
     try {
-      const { ok, status, data } = await api.login(email.trim().toLowerCase(), password);
+      const { ok, data } = await api.forgotPassword(trimmed);
       if (ok) {
-        await session.save(data.token, data.user.full_name, data.user.email);
-        setLoggedIn(true);
-      } else if (status === 403 && data.need_verification) {
-        navigation.navigate('OTP', { email: data.email || email.trim().toLowerCase() });
+        navigation.navigate('ResetPassword', { email: trimmed });
       } else {
-        Alert.alert('Login failed', data.error || 'Wrong email or password');
+        Alert.alert('Error', data.error || 'Could not send reset code');
       }
     } catch {
       Alert.alert('Error', 'Network error. Is the server running?');
@@ -40,30 +34,22 @@ export default function LoginScreen({ navigation }) {
     <SafeAreaView style={s.safe}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled">
-          <Text style={s.emoji}>🛡️</Text>
-          <Text style={s.title}>Phishing Detector</Text>
-          <Text style={s.subtitle}>Check any link before you click</Text>
+          <Text style={s.emoji}>🔑</Text>
+          <Text style={s.title}>Forgot Password</Text>
+          <Text style={s.subtitle}>Enter your account email and we'll send you a code to reset your password</Text>
 
           <TextInput
             style={s.input} placeholder="Email" placeholderTextColor={C.muted}
             value={email} onChangeText={setEmail}
             keyboardType="email-address" autoCapitalize="none" autoCorrect={false}
           />
-          <TextInput
-            style={s.input} placeholder="Password" placeholderTextColor={C.muted}
-            value={password} onChangeText={setPassword} secureTextEntry
-          />
 
-          <TouchableOpacity style={s.forgotLink} onPress={() => navigation.navigate('ForgotPassword')}>
-            <Text style={s.linkText}>Forgot password?</Text>
+          <TouchableOpacity style={s.btn} onPress={sendCode} disabled={loading}>
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Send Reset Code</Text>}
           </TouchableOpacity>
 
-          <TouchableOpacity style={s.btn} onPress={doLogin} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Login</Text>}
-          </TouchableOpacity>
-
-          <TouchableOpacity style={s.link} onPress={() => navigation.navigate('Register')}>
-            <Text style={s.linkText}>Create a new account</Text>
+          <TouchableOpacity style={s.link} onPress={() => navigation.goBack()}>
+            <Text style={s.linkText}>Back to Login</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -76,12 +62,11 @@ const s = StyleSheet.create({
   container: { flexGrow: 1, justifyContent: 'center', padding: 24 },
   emoji: { textAlign: 'center', fontSize: 56, marginBottom: 8 },
   title: { textAlign: 'center', fontSize: 26, fontWeight: 'bold', color: C.text, marginBottom: 4 },
-  subtitle: { textAlign: 'center', color: C.muted, marginBottom: 32, fontSize: 14 },
+  subtitle: { textAlign: 'center', color: C.muted, marginBottom: 32, fontSize: 14, lineHeight: 20, paddingHorizontal: 8 },
   input: {
     backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10,
     paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: C.text, marginBottom: 12,
   },
-  forgotLink: { alignSelf: 'flex-end', marginBottom: 16 },
   btn: { backgroundColor: C.primary, borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginTop: 4, marginBottom: 12 },
   btnText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
   link: { alignItems: 'center', paddingVertical: 10 },

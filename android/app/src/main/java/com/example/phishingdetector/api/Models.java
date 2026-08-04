@@ -40,6 +40,15 @@ public class Models {
         public EmailRequest(String email) { this.email = email; }
     }
 
+    public static class ResetPasswordRequest {
+        public String email;
+        public String code;
+        @SerializedName("new_password") public String newPassword;
+        public ResetPasswordRequest(String email, String code, String newPassword) {
+            this.email = email; this.code = code; this.newPassword = newPassword;
+        }
+    }
+
     public static class PredictRequest {
         public String url;
         public PredictRequest(String url) { this.url = url; }

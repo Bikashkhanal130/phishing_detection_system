@@ -28,6 +28,12 @@ export default {
   resendOtp: (email) =>
     request('POST', '/api/resend-otp', { email }),
 
+  forgotPassword: (email) =>
+    request('POST', '/api/forgot-password', { email }),
+
+  resetPassword: (email, code, new_password) =>
+    request('POST', '/api/reset-password', { email, code, new_password }),
+
   predict: (url, token) =>
     request('POST', '/api/predict', { url }, token),
 

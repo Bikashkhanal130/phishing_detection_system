@@ -46,9 +46,16 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnForgotPassword" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="Forgot password?"
+            android:layout_gravity="end"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_marginTop="4dp"/>
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnLogin" android:layout_width="match_parent"
             android:layout_height="52dp" android:text="Login"
-            android:layout_marginTop="20dp"/>
+            android:layout_marginTop="4dp"/>
 
         <ProgressBar android:id="@+id/progress" android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:visibility="gone"

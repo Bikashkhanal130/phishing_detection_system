@@ -25,12 +25,18 @@ import os
 import sys
 
 import joblib
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     accuracy_score,
+    auc,
     classification_report,
     confusion_matrix,
+    roc_curve,
 )
 from sklearn.model_selection import train_test_split
 
@@ -38,6 +44,7 @@ from feature_extraction import FEATURE_NAMES, vectorize
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(HERE, "model", "phishing_model.joblib")
+REPORT_DIR = os.path.join(HERE, "evaluation_report")
 
 # Maps the many ways a label might be written -> 1 (phishing) or 0 (legitimate)
 PHISHING_LABELS = {"1", "phishing", "phish", "bad", "malicious", "yes", "spam", "scam"}
@@ -124,7 +131,44 @@ def main():
     print(f"Accuracy: {acc * 100:.2f}%\n")
     print(classification_report(y_test, y_pred, target_names=["legit", "phishing"]))
     print("Confusion matrix [rows=true, cols=pred]:")
-    print(confusion_matrix(y_test, y_pred))
+    cm = confusion_matrix(y_test, y_pred)
+    print(cm)
+
+    os.makedirs(REPORT_DIR, exist_ok=True)
+
+    # Confusion matrix plot
+    plt.figure(figsize=(6, 5))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
+                xticklabels=["Legitimate", "Phishing"],
+                yticklabels=["Legitimate", "Phishing"])
+    plt.title("Confusion Matrix - Phishing Detection System")
+    plt.xlabel("Predicted Label")
+    plt.ylabel("True Label")
+    plt.tight_layout()
+    cm_path = os.path.join(REPORT_DIR, "confusion_matrix.png")
+    plt.savefig(cm_path, dpi=200)
+    plt.close()
+    print(f"Saved: {cm_path}")
+
+    # ROC curve + AUC
+    y_proba = clf.predict_proba(X_test)[:, 1]
+    fpr, tpr, _ = roc_curve(y_test, y_proba)
+    auc_score = auc(fpr, tpr)
+    print(f"AUC Score: {auc_score:.4f}")
+
+    plt.figure(figsize=(6, 5))
+    plt.plot(fpr, tpr, color="#1F6FEB", lw=2, label=f"ROC Curve (AUC = {auc_score:.2f})")
+    plt.plot([0, 1], [0, 1], color="gray", lw=1.2, linestyle="--", label="Random Classifier")
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title("ROC Curve - Phishing Detection System")
+    plt.legend(loc="lower right")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    roc_path = os.path.join(REPORT_DIR, "roc_curve.png")
+    plt.savefig(roc_path, dpi=200)
+    plt.close()
+    print(f"Saved: {roc_path}")
 
     # Show which features matter most
     importances = sorted(
