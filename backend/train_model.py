@@ -28,17 +28,20 @@ import joblib
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     accuracy_score,
     auc,
+    average_precision_score,
     classification_report,
     confusion_matrix,
+    precision_recall_curve,
     roc_curve,
 )
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedKFold, train_test_split
 
 from feature_extraction import FEATURE_NAMES, vectorize
 
@@ -150,18 +153,71 @@ def main():
     plt.close()
     print(f"Saved: {cm_path}")
 
-    # ROC curve + AUC
-    y_proba = clf.predict_proba(X_test)[:, 1]
-    fpr, tpr, _ = roc_curve(y_test, y_proba)
-    auc_score = auc(fpr, tpr)
-    print(f"AUC Score: {auc_score:.4f}")
+    # ROC curve + Precision-Recall curve, estimated with 5-fold stratified
+    # cross-validation over the whole dataset. A single train/test split can
+    # land on an unrealistically perfect (right-angle) curve just because
+    # that particular test fold happened to be easy; averaging several folds
+    # and shading +/-1 std. dev. gives a curve (and AUC) that reflects the
+    # model's typical performance instead of one lucky split.
+    print("\nRunning 5-fold cross-validation for ROC / Precision-Recall curves...")
+    X_arr = np.array(X)
+    y_arr = np.array(y)
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
+    mean_fpr = np.linspace(0, 1, 200)
+    mean_recall = np.linspace(0, 1, 200)
+    tprs, roc_aucs = [], []
+    precisions_interp, pr_aucs = [], []
+
+    for fold_i, (train_idx, test_idx) in enumerate(cv.split(X_arr, y_arr), start=1):
+        fold_clf = RandomForestClassifier(
+            n_estimators=args.trees,
+            max_depth=None,
+            min_samples_leaf=2,
+            n_jobs=-1,
+            random_state=42,
+            class_weight="balanced",
+        )
+        fold_clf.fit(X_arr[train_idx], y_arr[train_idx])
+        fold_proba = fold_clf.predict_proba(X_arr[test_idx])[:, 1]
+
+        fpr, tpr, _ = roc_curve(y_arr[test_idx], fold_proba)
+        tprs.append(np.interp(mean_fpr, fpr, tpr))
+        tprs[-1][0] = 0.0
+        roc_aucs.append(auc(fpr, tpr))
+
+        prec, rec, _ = precision_recall_curve(y_arr[test_idx], fold_proba)
+        order = np.argsort(rec)
+        precisions_interp.append(np.interp(mean_recall, rec[order], prec[order]))
+        pr_aucs.append(average_precision_score(y_arr[test_idx], fold_proba))
+        print(f"  Fold {fold_i}: ROC AUC = {roc_aucs[-1]:.4f}  PR AUC = {pr_aucs[-1]:.4f}")
+
+    mean_tpr = np.mean(tprs, axis=0)
+    mean_tpr[-1] = 1.0
+    std_tpr = np.std(tprs, axis=0)
+    mean_roc_auc = float(np.mean(roc_aucs))
+    std_roc_auc = float(np.std(roc_aucs))
+
+    mean_precision = np.mean(precisions_interp, axis=0)
+    std_precision = np.std(precisions_interp, axis=0)
+    mean_pr_auc = float(np.mean(pr_aucs))
+    std_pr_auc = float(np.std(pr_aucs))
+
+    print(f"5-fold CV ROC AUC: {mean_roc_auc:.4f} +/- {std_roc_auc:.4f}")
+    print(f"5-fold CV PR  AUC: {mean_pr_auc:.4f} +/- {std_pr_auc:.4f}")
+
+    # -- ROC curve --
     plt.figure(figsize=(6, 5))
-    plt.plot(fpr, tpr, color="#1F6FEB", lw=2, label=f"ROC Curve (AUC = {auc_score:.2f})")
+    plt.plot(mean_fpr, mean_tpr, color="#1F6FEB", lw=2,
+              label=f"Mean ROC (AUC = {mean_roc_auc:.4f} $\\pm$ {std_roc_auc:.4f})")
+    plt.fill_between(mean_fpr,
+                      np.clip(mean_tpr - std_tpr, 0, 1),
+                      np.clip(mean_tpr + std_tpr, 0, 1),
+                      color="#1F6FEB", alpha=0.15, label="± 1 std. dev.")
     plt.plot([0, 1], [0, 1], color="gray", lw=1.2, linestyle="--", label="Random Classifier")
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
-    plt.title("ROC Curve - Phishing Detection System")
+    plt.title("ROC Curve - Phishing Detection System (5-fold CV)")
     plt.legend(loc="lower right")
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
@@ -169,6 +225,28 @@ def main():
     plt.savefig(roc_path, dpi=200)
     plt.close()
     print(f"Saved: {roc_path}")
+
+    # -- Precision-Recall (AUC) curve --
+    plt.figure(figsize=(6, 5))
+    plt.plot(mean_recall, mean_precision, color="#DA3633", lw=2,
+              label=f"Mean PR Curve (AUC = {mean_pr_auc:.4f} $\\pm$ {std_pr_auc:.4f})")
+    plt.fill_between(mean_recall,
+                      np.clip(mean_precision - std_precision, 0, 1),
+                      np.clip(mean_precision + std_precision, 0, 1),
+                      color="#DA3633", alpha=0.15, label="± 1 std. dev.")
+    baseline = float(y_arr.mean())
+    plt.axhline(baseline, color="gray", lw=1.2, linestyle="--",
+                label=f"Random Classifier ({baseline:.2f})")
+    plt.xlabel("Recall")
+    plt.ylabel("Precision")
+    plt.title("Precision-Recall Curve - Phishing Detection System (5-fold CV)")
+    plt.legend(loc="lower left")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    pr_path = os.path.join(REPORT_DIR, "pr_curve.png")
+    plt.savefig(pr_path, dpi=200)
+    plt.close()
+    print(f"Saved: {pr_path}")
 
     # Show which features matter most
     importances = sorted(
