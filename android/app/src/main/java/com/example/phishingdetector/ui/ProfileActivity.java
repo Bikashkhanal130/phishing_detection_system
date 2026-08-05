@@ -1,5 +1,6 @@
 package com.example.phishingdetector.ui;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -38,11 +39,14 @@ public class ProfileActivity extends AppCompatActivity {
     private ImageView imgProfile;
     private ProgressBar progress;
     private SessionManager session;
+    private Object currentPhotoSource; // Uri of a freshly picked photo, or the server image URL string
 
     private final ActivityResultLauncher<String> pickImage =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri != null) {
+                    imgProfile.setPadding(0, 0, 0, 0);
                     imgProfile.setImageURI(uri);
+                    currentPhotoSource = uri;
                     uploadImage(uri);
                 }
             });
@@ -64,6 +68,7 @@ public class ProfileActivity extends AppCompatActivity {
         progress = findViewById(R.id.progress);
 
         findViewById(R.id.btnPickImage).setOnClickListener(v -> pickImage.launch("image/*"));
+        imgProfile.setOnClickListener(v -> showFullPhoto());
         findViewById(R.id.btnSave).setOnClickListener(v -> saveProfile());
         findViewById(R.id.btnLogout).setOnClickListener(v -> logout());
 
@@ -102,8 +107,10 @@ public class ProfileActivity extends AppCompatActivity {
                             etPhone.setText(u.phone);
                             etBio.setText(u.bio);
                             if (u.profileImage != null) {
+                                imgProfile.setPadding(0, 0, 0, 0);
+                                currentPhotoSource = ApiClient.BASE_URL + "uploads/" + u.profileImage;
                                 Glide.with(ProfileActivity.this)
-                                        .load(ApiClient.BASE_URL + "uploads/" + u.profileImage)
+                                        .load(currentPhotoSource)
                                         .circleCrop()
                                         .into(imgProfile);
                             }
@@ -166,6 +173,22 @@ public class ProfileActivity extends AppCompatActivity {
         } catch (Exception e) {
             toast("Could not read image: " + e.getMessage());
         }
+    }
+
+    private void showFullPhoto() {
+        if (currentPhotoSource == null) {
+            toast("No photo yet. Tap Change Photo to add one.");
+            return;
+        }
+        View view = getLayoutInflater().inflate(R.layout.dialog_photo_view, null);
+        ImageView imgFull = view.findViewById(R.id.imgFull);
+        Glide.with(this).load(currentPhotoSource).into(imgFull);
+
+        Dialog dialog = new Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+        dialog.setContentView(view);
+        view.setOnClickListener(v -> dialog.dismiss());
+        view.findViewById(R.id.btnCloseFull).setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 
     private void logout() {

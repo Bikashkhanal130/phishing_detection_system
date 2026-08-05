@@ -103,6 +103,10 @@ public class HistoryActivity extends AppCompatActivity {
     }
 
     private void downloadPdf() {
+        if (items.isEmpty()) {
+            toast("Search a URL first so you have scan history to export.");
+            return;
+        }
         setLoading(true);
         ApiClient.get().historyPdf(session.bearer())
                 .enqueue(new Callback<ResponseBody>() {

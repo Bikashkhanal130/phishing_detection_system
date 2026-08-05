@@ -56,6 +56,10 @@ export default function HistoryScreen() {
   }
 
   async function exportPdf() {
+    if (items.length === 0) {
+      Alert.alert('Nothing to export', 'Search a URL first so you have scan history to export.');
+      return;
+    }
     setDownloading(true);
     try {
       const token = await session.getToken();
@@ -90,6 +94,8 @@ export default function HistoryScreen() {
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
         <Text style={s.headerTitle}>Scan History</Text>
+      </View>
+      <View style={s.actionBar}>
         <TouchableOpacity
           style={s.pdfBtn}
           onPress={exportPdf}
@@ -97,10 +103,10 @@ export default function HistoryScreen() {
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           {downloading
-            ? <ActivityIndicator color={C.primary} size="small" />
+            ? <ActivityIndicator color="#fff" size="small" />
             : (
               <>
-                <Ionicons name="download-outline" size={22} color={C.primary} />
+                <Ionicons name="download-outline" size={24} color="#fff" />
                 <Text style={s.pdfBtnText}>Export PDF</Text>
               </>
             )}
@@ -132,17 +138,19 @@ export default function HistoryScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg },
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: C.primary, paddingHorizontal: 16, paddingVertical: 14,
   },
   headerTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  pdfBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 7,
-    minHeight: 48, backgroundColor: '#fff', borderRadius: 24,
-    paddingHorizontal: 18, paddingVertical: 12,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 3, elevation: 3,
+  actionBar: {
+    backgroundColor: C.primary, paddingHorizontal: 16, paddingBottom: 16,
   },
-  pdfBtnText: { color: C.primary, fontSize: 16, fontWeight: '700' },
+  pdfBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9,
+    minHeight: 52, backgroundColor: C.text, borderRadius: 12,
+    paddingHorizontal: 20, paddingVertical: 14,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4,
+  },
+  pdfBtnText: { color: '#fff', fontSize: 18, fontWeight: '700' },
   list: { padding: 10, paddingBottom: 24 },
   row: {
     backgroundColor: C.surface, borderRadius: 12, padding: 12, marginBottom: 8,

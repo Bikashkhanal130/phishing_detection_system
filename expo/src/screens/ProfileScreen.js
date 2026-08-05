@@ -112,6 +112,7 @@ export default function ProfileScreen() {
               <Image
                 source={{ uri: `${BASE_URL}/uploads/${profile.profile_image}` }}
                 style={s.avatarImg}
+                resizeMode="cover"
               />
             ) : (
               <View style={[s.avatarImg, s.avatarFallback]}>
